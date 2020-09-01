@@ -1,8 +1,6 @@
 package anylife.scrolltextview;
 
 import android.content.Context;
-import android.content.res.ColorStateList;
-import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -13,13 +11,11 @@ import android.graphics.PorterDuff.Mode;
 import android.support.annotation.ColorInt;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,8 +30,8 @@ import java.util.concurrent.TimeUnit;
  * 1.setText() immediately take effect (v1.3.6)
  * 2.support scroll forever            (v1.3.7)
  * 3.support scroll text size         （v1.5.0)
- *
- *
+ * <p>
+ * <p>
  * Basic knowledge：https://www.jianshu.com/p/918fec73a24d
  *
  * @author anylife.zlb@gmail.com  2013/09/02
@@ -56,7 +52,7 @@ public class ScrollTextView extends SurfaceView implements SurfaceHolder.Callbac
     private String text = "";               // scroll text
     private float textSize = 20f;           // default text size
     private int textColor;
-    private int textBackColor=0x00000000;
+    private int textBackColor = 0x00000000;
 
     private int needScrollTimes = Integer.MAX_VALUE;      //scroll times
 
@@ -71,6 +67,10 @@ public class ScrollTextView extends SurfaceView implements SurfaceHolder.Callbac
 
     boolean isSetNewText = false;
     boolean isScrollForever = true;
+    private List<ScrollTextWrap> scrollTextWrapList = new ArrayList<>();
+    private OnTextItemClickListener onTextItemClickListener;
+    private String BLANK_END;
+    private int BLANK_COUNT = 30;
 
     /**
      * constructs 1
@@ -110,6 +110,8 @@ public class ScrollTextView extends SurfaceView implements SurfaceHolder.Callbac
 
         setFocusable(true);
         arr.recycle();
+
+        initBlank(BLANK_COUNT);
     }
 
     /**
@@ -200,7 +202,7 @@ public class ScrollTextView extends SurfaceView implements SurfaceHolder.Callbac
      *
      * @return textBackColor
      */
-    public int getBackgroundColor(){
+    public int getBackgroundColor() {
         return textBackColor;
     }
 
@@ -210,9 +212,9 @@ public class ScrollTextView extends SurfaceView implements SurfaceHolder.Callbac
      *
      * @param color textBackColor
      */
-    public void setScrollTextBackgroundColor(int color){
+    public void setScrollTextBackgroundColor(int color) {
         this.setBackgroundColor(color);
-        this.textBackColor=color;
+        this.textBackColor = color;
     }
 
 
@@ -237,10 +239,10 @@ public class ScrollTextView extends SurfaceView implements SurfaceHolder.Callbac
     /**
      * get text size
      *
-     * @return  px
+     * @return px
      */
     public float getTextSize() {
-        return px2sp(this.getContext(),textSize);
+        return px2sp(this.getContext(), textSize);
     }
 
 
@@ -280,7 +282,7 @@ public class ScrollTextView extends SurfaceView implements SurfaceHolder.Callbac
             throw new IllegalArgumentException("textSize must  < 900");
         } else {
 
-            this.textSize=sp2px(getContext(), textSizeTem);
+            this.textSize = sp2px(getContext(), textSizeTem);
             //重新设置Size
             paint.setTextSize(textSize);
             //试图区域也要改变
@@ -322,7 +324,7 @@ public class ScrollTextView extends SurfaceView implements SurfaceHolder.Callbac
     }
 
 
-    public  int px2sp(Context context, float pxValue) {
+    public int px2sp(Context context, float pxValue) {
         float fontScale = context.getResources().getDisplayMetrics().scaledDensity;
         return (int) (pxValue / fontScale + 0.5f);
     }
@@ -349,6 +351,57 @@ public class ScrollTextView extends SurfaceView implements SurfaceHolder.Callbac
         measureVarious();
     }
 
+    public void setText(List<String> textList) {
+        if (textList == null || textList.size() <= 0) {
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        scrollTextWrapList.clear();
+        for (int i = 0; i < textList.size(); i++) {
+            String text = textList.get(i);
+            if (i != textList.size() - 1) {
+                text += BLANK_END;
+            }
+            ScrollTextWrap textWrap = new ScrollTextWrap();
+            textWrap.setIndex(i);
+            textWrap.setText(textList.get(i));
+            textWrap.setTextLength(paint.measureText(text));
+
+            scrollTextWrapList.add(textWrap);
+            sb.append(text);
+        }
+        setText(sb.toString());
+    }
+
+    public void refreshTextWrap() {
+        for (int i = 0; i < scrollTextWrapList.size(); i++) {
+            ScrollTextWrap textWrap = scrollTextWrapList.get(i);
+            textWrap.setTextLength(paint.measureText(textWrap.getText() + BLANK_END));
+        }
+    }
+
+    public void initBlank(int count) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < count; i++) {
+            sb.append(" ");
+        }
+        BLANK_END = sb.toString();
+    }
+
+    public ScrollTextWrap getClickTextWrap(float x) {
+        float xEnd = viewWidth;
+        float xNow = textX + x;
+        for (int i = 0; i < scrollTextWrapList.size(); i++) {
+            ScrollTextWrap textWrap = scrollTextWrapList.get(i);
+            xEnd += textWrap.getTextLength();
+            if (xNow < xEnd) {
+                Log.d("----", "getClickTextWrap() called with: x = [" + x + "]" + " xNow = [" + xNow + "]" + " xEnd = [" + xEnd + "]");
+                return textWrap;
+            }
+        }
+        Log.d("----", "getClickTextWrap() called with: x = [" + x + "]" + " xNow = [" + xNow + "]" + " xEnd = [" + xEnd + "]");
+        return null;
+    }
 
     /**
      * Set the text color
@@ -389,6 +442,12 @@ public class ScrollTextView extends SurfaceView implements SurfaceHolder.Callbac
      */
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        if (onTextItemClickListener != null && event.getAction() == MotionEvent.ACTION_DOWN) {
+            ScrollTextWrap clickTextWrap = getClickTextWrap(event.getX());
+            if (clickTextWrap != null) {
+                onTextItemClickListener.onClick(clickTextWrap.index, clickTextWrap.text);
+            }
+        }
         if (!clickEnable) {
             return true;
         }
@@ -493,12 +552,16 @@ public class ScrollTextView extends SurfaceView implements SurfaceHolder.Callbac
         FontMetrics fontMetrics = paint.getFontMetrics();
         float distance = (fontMetrics.bottom - fontMetrics.top) / 2 - fontMetrics.bottom;
         textY = viewHeight / 2 + distance;
+
+        refreshTextWrap();
     }
 
+    public void setOnTextItemClickListener(OnTextItemClickListener onTextItemClickListener) {
+        this.onTextItemClickListener = onTextItemClickListener;
+    }
 
     /**
      * Scroll thread
-     *
      */
     class ScrollTextThread implements Runnable {
         @Override
@@ -545,4 +608,37 @@ public class ScrollTextView extends SurfaceView implements SurfaceHolder.Callbac
         }
     }
 
+    private static class ScrollTextWrap {
+        private String text;
+        private float textLength;
+        private int index;
+
+        public int getIndex() {
+            return index;
+        }
+
+        public void setIndex(int index) {
+            this.index = index;
+        }
+
+        public String getText() {
+            return text;
+        }
+
+        public void setText(String text) {
+            this.text = text;
+        }
+
+        public float getTextLength() {
+            return textLength;
+        }
+
+        public void setTextLength(float textLength) {
+            this.textLength = textLength;
+        }
+    }
+
+    public interface OnTextItemClickListener {
+        void onClick(int index, String text);
+    }
 }

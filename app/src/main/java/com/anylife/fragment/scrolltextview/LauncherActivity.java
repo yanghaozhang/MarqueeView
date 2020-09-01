@@ -6,7 +6,13 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.LogManager;
 
 import anylife.scrolltextview.ScrollTextView;
 
@@ -23,6 +29,7 @@ public class LauncherActivity extends AppCompatActivity {
 
     public static final int REQUEST_SETTING_CODE = 0001;
     private ScrollTextView scrollTextView;
+    private ScrollTextView scrollTextView2;
 
 
     @Override
@@ -31,6 +38,7 @@ public class LauncherActivity extends AppCompatActivity {
         hideBottomUIMenu();
         setContentView(R.layout.activity_launcher);
         scrollTextView = findViewById(R.id.scrollText);
+        scrollTextView2 = findViewById(R.id.scrollText2);
 
         findViewById(R.id.setting).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -46,6 +54,18 @@ public class LauncherActivity extends AppCompatActivity {
                 startActivityForResult(intent, REQUEST_SETTING_CODE);
             }
         });
+        scrollTextView2.setOnTextItemClickListener(new ScrollTextView.OnTextItemClickListener() {
+            @Override
+            public void onClick(int index, String text) {
+                Log.d("------", "onClick() called with: index = [" + index + "], text = [" + text + "]");
+                Toast.makeText(LauncherActivity.this, "click::" + index, Toast.LENGTH_SHORT).show();
+            }
+        });
+        List<String> textList = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            textList.add("kkkkkkkk" + i);
+        }
+        scrollTextView2.setText(textList);
     }
 
 
