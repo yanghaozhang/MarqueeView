@@ -20,9 +20,8 @@ import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Android auto Scroll Text,like TV News,AD devices
@@ -64,7 +63,7 @@ public class ScrollTextView extends SurfaceView implements SurfaceHolder.Callbac
     private float textY = 0f;
     private float viewWidth_plus_textLength = 0.0f;
 
-    private ScheduledExecutorService scheduledExecutorService;
+    private ExecutorService scheduledExecutorService;
 
     boolean isSetNewText = false;
     boolean isScrollForever = true;
@@ -169,7 +168,7 @@ public class ScrollTextView extends SurfaceView implements SurfaceHolder.Callbac
     public void surfaceCreated(SurfaceHolder holder) {
         stopScroll = false;
         startSur();
-        scheduledExecutorService.scheduleAtFixedRate(new ScrollTextThread(), 100, 100, TimeUnit.MILLISECONDS);
+        scheduledExecutorService.execute(new ScrollTextThread());
         Log.d(TAG, "ScrollTextTextView is created");
     }
 
@@ -179,7 +178,7 @@ public class ScrollTextView extends SurfaceView implements SurfaceHolder.Callbac
         }
         isInit = true;
         if (scheduledExecutorService == null) {
-            scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+            scheduledExecutorService = Executors.newSingleThreadExecutor();
         }
     }
 
@@ -539,7 +538,9 @@ public class ScrollTextView extends SurfaceView implements SurfaceHolder.Callbac
      */
     private synchronized void draw(float X, float Y) {
         Canvas canvas = surfaceHolder.lockCanvas();
-
+        if (canvas == null) {
+            return;
+        }
         paint.setXfermode(new PorterDuffXfermode(Mode.CLEAR));
         canvas.drawPaint(paint);
         paint.setXfermode(new PorterDuffXfermode(Mode.SRC));
