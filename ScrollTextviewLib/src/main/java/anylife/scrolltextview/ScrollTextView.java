@@ -8,6 +8,7 @@ import android.graphics.Paint;
 import android.graphics.Paint.FontMetrics;
 import android.graphics.PixelFormat;
 import android.graphics.PorterDuff.Mode;
+import android.graphics.PorterDuffXfermode;
 import android.support.annotation.ColorInt;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -71,6 +72,7 @@ public class ScrollTextView extends SurfaceView implements SurfaceHolder.Callbac
     private OnTextItemClickListener onTextItemClickListener;
     private String BLANK_END;
     private int BLANK_COUNT = 30;
+    private boolean isInit = false;
 
     /**
      * constructs 1
@@ -166,9 +168,19 @@ public class ScrollTextView extends SurfaceView implements SurfaceHolder.Callbac
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         stopScroll = false;
-        scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+        startSur();
         scheduledExecutorService.scheduleAtFixedRate(new ScrollTextThread(), 100, 100, TimeUnit.MILLISECONDS);
         Log.d(TAG, "ScrollTextTextView is created");
+    }
+
+    private void startSur() {
+        if (isInit) {
+            return;
+        }
+        isInit = true;
+        if (scheduledExecutorService == null) {
+            scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+        }
     }
 
     /**
@@ -179,7 +191,6 @@ public class ScrollTextView extends SurfaceView implements SurfaceHolder.Callbac
     @Override
     public void surfaceDestroyed(SurfaceHolder arg0) {
         stopScroll = true;
-        scheduledExecutorService.shutdownNow();
         Log.d(TAG, "ScrollTextTextView is destroyed");
     }
 
@@ -528,6 +539,14 @@ public class ScrollTextView extends SurfaceView implements SurfaceHolder.Callbac
      */
     private synchronized void draw(float X, float Y) {
         Canvas canvas = surfaceHolder.lockCanvas();
+
+        paint.setXfermode(new PorterDuffXfermode(Mode.CLEAR));
+        canvas.drawPaint(paint);
+        paint.setXfermode(new PorterDuffXfermode(Mode.SRC));
+
+        paint.setColor(textColor);
+        paint.setTextSize(textSize);
+
         canvas.drawColor(Color.TRANSPARENT, Mode.CLEAR);
         canvas.drawText(text, X, Y, paint);
         surfaceHolder.unlockCanvasAndPost(canvas);
@@ -570,7 +589,7 @@ public class ScrollTextView extends SurfaceView implements SurfaceHolder.Callbac
             measureVarious();
 
             while (!stopScroll) {
-
+                Log.d("-----", "run: ---");
                 // NoNeed Scroll，短文不滚动
 //                if (textWidth < getWidth()) {
 //                    draw(1, textY);

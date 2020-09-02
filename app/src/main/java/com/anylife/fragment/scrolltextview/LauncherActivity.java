@@ -59,6 +59,8 @@ public class LauncherActivity extends AppCompatActivity {
             public void onClick(int index, String text) {
                 Log.d("------", "onClick() called with: index = [" + index + "], text = [" + text + "]");
                 Toast.makeText(LauncherActivity.this, "click::" + index, Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(LauncherActivity.this, MainActivity2.class);
+                startActivity(intent);
             }
         });
         List<String> textList = new ArrayList<>();
@@ -112,7 +114,7 @@ public class LauncherActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
+/*
         if (requestCode == REQUEST_SETTING_CODE && resultCode == RESULT_OK) {
             int scrollSpeed = data.getIntExtra(SCROLL_SPEED_KEY, 0);
             if (0 != scrollSpeed) {
@@ -137,7 +139,7 @@ public class LauncherActivity extends AppCompatActivity {
             if (!TextUtils.isEmpty(data.getStringExtra(TEXT_INPUT_KEY))) {
                 scrollTextView.setText(data.getStringExtra(TEXT_INPUT_KEY));
             }
-        }
+        }*/
     }
 
 
