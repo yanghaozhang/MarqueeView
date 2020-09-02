@@ -590,7 +590,7 @@ public class ScrollTextView extends SurfaceView implements SurfaceHolder.Callbac
             measureVarious();
 
             while (!stopScroll) {
-                Log.d("-----", "run: ---");
+//                Log.d("-----", "run: ---");
                 // NoNeed Scroll，短文不滚动
 //                if (textWidth < getWidth()) {
 //                    draw(1, textY);
@@ -606,6 +606,11 @@ public class ScrollTextView extends SurfaceView implements SurfaceHolder.Callbac
                             Log.e(TAG, e.toString());
                         }
                         continue;
+                    }
+                    try {
+                        Thread.sleep(20);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
 
                     draw(viewWidth - textX, textY);
